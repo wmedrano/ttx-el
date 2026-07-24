@@ -25,6 +25,8 @@ Add `ttx-mode` to your load path and require it:
 
 ## Requirements
 
+### Fonttools
+
 The [fonttools](https://github.com/fonttools/fonttools) package provides the
 `ttx` command, which must be installed and available in your system's `PATH`. If
 it is not in the `PATH`, the location may be set within `ttx-command`.
@@ -33,7 +35,7 @@ it is not in the `PATH`, the location may be set within `ttx-command`.
 (setq ttx-command "/path/to/ttx")
 ```
 
-### WOFF2
+### WOFF2 (optional)
 
 The [woff2](https://github.com/google/woff2) package provides the
 `woff2_decompress` command, which is required for `.woff2` files. It must be
