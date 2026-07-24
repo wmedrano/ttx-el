@@ -103,20 +103,27 @@ Signals a `user-error' if the command is not found or exits non-zero."
   "Load table list from FILENAME using `ttx -l`."
   (ttx--parse-table-list (ttx--run-command "-l" filename)))
 
+(defun ttx--xml-normalized-tag (table-tag)
+  "Get TABLE-TAG's XML representation.
+
+When outputting XML, ttx converts slashes to underscores in order to produce
+valid XML."
+  (string-replace "/" "_" table-tag))
+
 (defun ttx--extract-table-xml (xml-output table-tag)
   "Extract just the TABLE-TAG element from XML-OUTPUT."
-  (let ((table-tag (string-replace "/" "_" table-tag)))
+  (let* ((table-tag   (ttx--xml-normalized-tag table-tag))
+         (start-regex (format "^\\s-*<%s\\b" (regexp-quote table-tag)))
+         (end-regex   (format "^\\s-*</%s>" (regexp-quote table-tag))))
     (with-temp-buffer
       (insert xml-output)
       (goto-char (point-min))
-      (let ((start-regex (format "^\\s-*<%s\\b" (regexp-quote table-tag)))
-            (end-regex (format "^\\s-*</%s>" (regexp-quote table-tag))))
-        (when (re-search-forward start-regex nil t)
-          (beginning-of-line)
-          (let ((start (point)))
-            (if (re-search-forward end-regex nil t)
-                (buffer-substring-no-properties start (point))
-              nil)))))))
+      (when (re-search-forward start-regex nil t)
+        (beginning-of-line)
+        (let ((start (point)))
+          (if (re-search-forward end-regex nil t)
+              (buffer-substring-no-properties start (point))
+            nil))))))
 
 (defun ttx--decompress-woff2 (woff2-filename)
   "Decompress WOFF2-FILENAME resulting temp filename.
@@ -217,7 +224,7 @@ If TABLE-TAG is \"all\", load all available tables."
   (if (string= table-tag "all")
       (ttx-load-all-tables)
     (ttx-load-tables (list table-tag))
-    (let ((search-tag (string-replace "/" "_" table-tag)))
+    (let ((search-tag (ttx--xml-normalized-tag table-tag)))
       (goto-char (point-max))
       (when (re-search-backward (format "^\\s-*<%s\\b" (regexp-quote search-tag)) nil t)
         (message "Loaded table: %s" table-tag)))))
@@ -235,7 +242,7 @@ If TABLE-TAG is \"all\", load all available tables."
                               nil t)))))
   (let ((inhibit-read-only t)
         ;; / is reserved in XML so we use underscore.
-        (search-tag (string-replace "/" "_" table-tag)))
+        (search-tag (ttx--xml-normalized-tag table-tag)))
     (goto-char (point-min))
     (let ((start-regex (format "^\\s-*<%s\\b" (regexp-quote search-tag)))
           (end-regex (format "^\\s-*</%s>" (regexp-quote search-tag))))
